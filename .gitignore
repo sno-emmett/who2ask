@@ -131,3 +131,8 @@ dmypy.json
 # slack keys
 run.bat
 dev.env
+
+#data base
+.helpers/
+users.json
+who2ask.db

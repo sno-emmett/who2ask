@@ -1,24 +1,22 @@
 #who2ask 
-import os
+import os, asyncio, json
 from views import *
 from dbops import *
-from slack_bolt import App
-from slack_bolt.adapter.socket_mode import SocketModeHandler #for socket hosting
+from slack_bolt.app.async_app import AsyncApp
+from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
 homeviews = {}
-# "/who [topic]" will return a list of people with relevant knowledge of the topic.
-# "/what [name]" will return a list of topics the named person has volunteered. 
 
 @app.event("app_home_opened")
-def app_home_opened(client, event, logger):
+async def app_home_opened(client, event, logger):
   user_id = event["user"]
   user_name = ""
   user_image = ""
   
   # Get user info (eventually we'll cache this)
   try:
-    response = client.users_profile_get(user=user_id)
+    response = await client.users_profile_get(user=user_id)
     user_name = response["profile"]["real_name_normalized"]
     user_image = response["profile"]["image_72"]
   except Exception as e:
@@ -30,7 +28,7 @@ def app_home_opened(client, event, logger):
     homeviews[user_id] = compose_home(user_name, user_image)
   
   try:
-    app.client.views_publish(
+    await app.client.views_publish(
       user_id=user_id,
       view=homeviews[user_id]
     )
@@ -38,21 +36,37 @@ def app_home_opened(client, event, logger):
     logger.error(f"Error publishing home tab: {e}")
 
 @app.action("input_search")
-def handle_search(ack, body, logger):
-    ack()
+async def handle_search(ack, body, logger):
+    await ack()
     query = body['actions'][0]['value']
     user_id = body['user']['id']
     
     # update homeviews[user_id] with search results so that if user clicks away, they can return to their search results
     homeviews[user_id] = compose_search_results(query)
     try:
-      app.client.views_publish(
+      await app.client.views_publish(
         user_id=user_id,
         view=homeviews[user_id]
       )
     except Exception as e:
       logger.error(f"Error publishing home tab: {e}")
+    
+    await get_workspace_users(logger)
+      
+async def get_workspace_users(logger):
+  try:
+    response = await app.client.users_list()
+    #print(response)
+    with open('users.json', 'w', encoding='utf-8') as f:
+      json.dump(response['members'], f, ensure_ascii=False, indent=4)
+    print("Wrote users to users.json")
+  except Exception as e:
+    logger.error(f"Error getting workspace users: {e}")
+
+async def main():
+  print("Hello Darling, i'm asynchronous!")
+  handler = AsyncSocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
+  await handler.start_async()
 
 if __name__ == '__main__':
-    print("Hello Darling")
-    SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"]).start() 
+    asyncio.run(main())
