@@ -1,4 +1,5 @@
 #slack ui views
+from dbops import *
 
 def compose_home(user_name, user_image):
     view = {
@@ -25,11 +26,9 @@ def compose_home(user_name, user_image):
     }
     return view
 
-def compose_search_results(query):
-    view = {
-        "type": "home",
-        "blocks": [
-            {
+def compose_search_results(query, results):
+    results_formatted = [
+        {
 			"dispatch_action": True,
 			"type": "input",
 			"element": {
@@ -55,47 +54,33 @@ def compose_search_results(query):
             },
             {
                 "type": "divider"
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*nothing*\nI've been folding gliders for years! Ask me anything.\n-<https://acmeco.slack.com/team/U1H63D8SZ|Little Cat>"
-                },
-                "accessory": {
-                    "type": "image",
-                    "image_url": "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg",
-                    "alt_text": "username"
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Paper Airplanes*\nI've been folding gliders for years! Ask me anything.\n-<https://acmeco.slack.com/team/U1H63D8SZ|Little Cat>"
-                },
-                "accessory": {
-                    "type": "image",
-                    "image_url": "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg",
-                    "alt_text": "username"
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": "*Paper Airplanes*\nI've been folding gliders for years! Ask me anything.\n-<https://acmeco.slack.com/team/U1H63D8SZ|Little Cat>"
-                },
-                "accessory": {
-                    "type": "image",
-                    "image_url": "https://pbs.twimg.com/profile_images/625633822235693056/lNGUneLX_400x400.jpg",
-                    "alt_text": "username"
-                }
-            },
-            {
-                "type": "divider"
             }
-            
-        ]
+    ]
+    
+    for result in results[:10]:
+        user_id = result[0]
+        real_name = result[1]
+        avatar = result[2]
+        topic_name = result[3].title()
+        topic_desc = result[4]
+        results_formatted.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*{topic_name}*\n{topic_desc}\n:incoming_envelope:<https://snustest.slack.com/team/{user_id}|{real_name}>"
+                },
+                "accessory": {
+                    "type": "image",
+                    "image_url": avatar,
+                    "alt_text": real_name
+                }
+        })
+        
+    results_formatted.append({"type": "divider"})
+    
+        
+    view = {
+        "type": "home",
+        "blocks": results_formatted
     }
     return view

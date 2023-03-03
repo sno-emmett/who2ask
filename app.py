@@ -2,6 +2,7 @@
 import os, asyncio, json
 from views import *
 from dbops import *
+from impl import *
 from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 
@@ -42,7 +43,8 @@ async def handle_search(ack, body, logger):
     user_id = body['user']['id']
     
     # update homeviews[user_id] with search results so that if user clicks away, they can return to their search results
-    homeviews[user_id] = compose_search_results(query)
+    results = await search_db(query)
+    homeviews[user_id] = compose_search_results(query, results)
     try:
       await app.client.views_publish(
         user_id=user_id,
@@ -51,7 +53,8 @@ async def handle_search(ack, body, logger):
     except Exception as e:
       logger.error(f"Error publishing home tab: {e}")
     
-    await get_workspace_users(logger)
+    #await get_workspace_users(logger)
+    #await search_db(query)
       
 async def get_workspace_users(logger):
   try:
