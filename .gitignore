@@ -136,3 +136,6 @@ dev.env
 .helpers/
 users.json
 who2ask.db
+admincheck.py
+
+notes.txt
