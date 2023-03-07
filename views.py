@@ -134,6 +134,7 @@ def compose_profile(topics):
 				},
 				{
 					"type": "button",
+					"action_id": "button_add_topic",
 					"text": {
 						"type": "plain_text",
 						"emoji": True,
@@ -144,6 +145,7 @@ def compose_profile(topics):
 				},
 				{
 					"type": "button",
+					"action_id": "button_delete_topic",
 					"text": {
 						"type": "plain_text",
 						"emoji": True,
@@ -251,4 +253,164 @@ def compose_edit_modal(topic):
 			}
 		]
 	}
+    return view
+
+def compose_add_modal():
+    view = {
+		"type": "modal",
+		"callback_id": "topic_add_modal",
+		"title": {
+			"type": "plain_text",
+			"text": "Add Topic",
+			"emoji": True
+		},
+		"submit": {
+			"type": "plain_text",
+			"text": "Submit",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
+			"emoji": True
+		},
+		"blocks": [
+			{
+				"type": "input",
+				"block_id": "topic_name_field",
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "topic_name_input",
+					"placeholder": {
+                        "type": "plain_text",
+                        "text": "eg. Dealing With Spiders"
+                    }
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Topic Name",
+					"emoji": True
+				}
+			},
+   			{
+				"type": "input",
+    			"block_id": "topic_notes_field",	
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "topic_notes_input",
+					"placeholder": {
+                        "type": "plain_text",
+                        "text": "eg. I have developed many techniques to deal with my fear of spiders. Ask me about them!"
+                    },
+					"multiline": True,
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Topic Notes",
+					"emoji": True
+				}
+			}
+		]
+	}
+    return view
+
+def compose_profile_delete(topics):
+    #print(topics)
+    topics_formatted = [
+		{
+			"type": "actions",
+			"elements": [
+                {
+					"type": "button",
+     				"action_id": "button_return_to_search",
+					"text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": "Return to Search"
+					},
+					"value": "click_me_123"
+				},
+				{
+					"type": "button",
+					"action_id": "button_add_topic",
+					"text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": "Add Topic"
+					},
+					"style": "primary",
+					"value": "click_me_123"
+				},
+				{
+					"type": "button",
+					"action_id": "button_cancel_delete_topic",
+					"text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": "Cancel Delete"
+					},
+					"value": "click_me_123"
+				}
+			]
+		},
+  		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*Your Topics*"
+			}
+		},
+		{
+			"type": "divider"
+		}
+    ]
+    
+    for topic in topics:
+        topic_title = topic[1]
+        topic_notes = topic[2]
+        topic_badge_community = topic[3]
+        topic_badge_snohetta = topic[4]
+        topics_formatted.append({
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": f"*{topic_title}*\n{topic_notes}"
+			},
+			"accessory": {
+				"type": "button",
+				"action_id": "button_confirm_delete_topic",
+				"text": {
+					"type": "plain_text",
+					"emoji": True,
+					"text": "Delete"
+				},
+				"value": f"{topic[0]}",
+    			"style": "danger",
+				"confirm": {
+					"title": {
+						"type": "plain_text",
+						"text": f"Delete '{topic_title}'?"
+					},
+					"text": {
+						"type": "mrkdwn",
+						"text": "Are you sure you want to delete this topic?"
+					},
+					"confirm": {
+						"type": "plain_text",
+						"text": "Yes, delete it!"
+					},
+					"deny": {
+						"type": "plain_text",
+						"text": "Stop, I've changed my mind!"
+					}
+				}
+			}
+		})
+	
+    topics_formatted.append({"type": "divider"})
+    
+    view = {
+        "type": "home",
+        "blocks": topics_formatted
+    }
     return view

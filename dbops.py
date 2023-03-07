@@ -44,11 +44,29 @@ async def get_topic_by_id(topic_id):
   #   print(row)
   return data
 
-async def write_topic(topic_name, topic_notes, topic_id):
-  #write topic to db
+async def update_topic(topic_name, topic_notes, topic_id):
+  #update topic in db
   con = sqlite3.connect("who2ask.db")
   cur = con.cursor()
   cur.execute('''UPDATE topics SET name = ?, notes = ? WHERE id = ?''', (topic_name, topic_notes, topic_id))
+  con.commit()
+  con.close()
+  return
+
+async def add_topic(topic_name, topic_notes, topic_owner):
+  #add topic to db
+  con = sqlite3.connect("who2ask.db")
+  cur = con.cursor()
+  cur.execute("INSERT OR IGNORE INTO topics(name, owner, notes) VALUES (?, ?, ?)", (topic_name, topic_owner, topic_notes))
+  topic_id = cur.lastrowid
+  cur.execute("INSERT OR IGNORE INTO join_users_topics(user, topic) VALUES (?, ?)", (topic_owner, topic_id))
+  con.commit()
+  
+async def delete_topic(topic_id):
+  #delete topic from db
+  con = sqlite3.connect("who2ask.db")
+  cur = con.cursor()
+  cur.execute('''DELETE FROM topics WHERE id = ?''', (topic_id,))
   con.commit()
   con.close()
   return

@@ -104,20 +104,113 @@ async def handle_edit_topic(ack, body, logger):
   except Exception as e:
       logger.error(f"Error publishing home tab: {e}")
       
+@app.action("button_add_topic")
+async def handle_add_topic(ack, body, logger):
+  await ack()
+  try:
+    await app.client.views_open(
+        trigger_id=body["trigger_id"],
+        view= compose_add_modal()
+    )
+  except Exception as e:
+      logger.error(f"Error publishing home tab: {e}")
+      
+@app.action("button_delete_topic")
+async def handle_delete_topic_view(ack, body, logger):
+  await ack()
+  user_id = body['user']['id']
+  
+  try:
+    topics = await get_topics_by_user(user_id)
+    await app.client.views_publish(
+        user_id=user_id,
+        view=compose_profile_delete(topics)
+    )
+  except Exception as e:
+    logger.error(f"Error publishing delete view home tab: {e}")
+
+@app.action("button_cancel_delete_topic")
+async def handle_cancel_delete_topic(ack, body, logger):
+  await ack()
+  user_id = body['user']['id']
+  try:
+    await app.client.views_publish(
+      user_id=user_id,
+      view=profileviews[user_id]
+    )
+  except Exception as e:
+    logger.error(f"Error publishing home tab: {e}")
+
+@app.action("button_confirm_delete_topic")
+async def handle_confirm_delete_topic(ack, body, logger):
+  await ack()
+  user_id = body['user']['id']
+  topic_id = body['actions'][0]['value']
+  
+  #remove topic from db
+  try:
+    await delete_topic(topic_id)
+  except Exception as e:
+    logger.error(f"Error deleting topic: {e}")
+  
+  #read updated user topics from db
+  try:
+    topics = await get_topics_by_user(user_id)
+    profileviews[user_id] = compose_profile(topics)
+  except Exception as e:
+    logger.error(f"Error composing profile: {e}")
+  
+  #publish updated profile view
+  try:
+    await app.client.views_publish(
+      user_id=user_id,
+      view=profileviews[user_id]
+    )
+  except Exception as e:
+    logger.error(f"Error publishing home tab: {e}")
+      
 @app.view("topic_edit_modal")
 async def topic_edit_submission(ack, body, view, logger):
   await ack()
   user_id = body['user']['id']
   topic_name = view["state"]["values"]["topic_name_field"]["topic_name_input"]["value"]
   topic_notes = view["state"]["values"]["topic_notes_field"]["topic_notes_input"]["value"]
-  topic_id = view["private_metadata"] #topic_id is stored in modal private_metadata
+  topic_id = view["private_metadata"] #topic_id is stored in modal "private_metadata" in views
   
   #write updated topic to db
   try:
-    await write_topic(topic_name, topic_notes, topic_id)
+    await update_topic(topic_name, topic_notes, topic_id)
   except Exception as e:
     logger.error(f"Error writing topic: {e}")
   
+  #read updated user topics from db
+  try:
+    topics = await get_topics_by_user(user_id)
+    profileviews[user_id] = compose_profile(topics)
+  except Exception as e:
+    logger.error(f"Error composing profile: {e}")
+  
+  #publish updated profile view
+  try:
+    await app.client.views_publish(
+      user_id=user_id,
+      view=profileviews[user_id]
+    )
+  except Exception as e:
+    logger.error(f"Error publishing home tab: {e}")
+
+@app.view("topic_add_modal")
+async def topic_add_submission(ack, body, view, logger):
+  await ack()
+  user_id = body['user']['id']
+  topic_name = view["state"]["values"]["topic_name_field"]["topic_name_input"]["value"]
+  topic_notes = view["state"]["values"]["topic_notes_field"]["topic_notes_input"]["value"]
+  
+  #add new topic to db
+  try:
+    await add_topic(topic_name, topic_notes, user_id)
+  except Exception as e:
+    logger.error(f"Error adding topic: {e}")
   
   #read updated user topics from db
   try:
