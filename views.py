@@ -45,6 +45,21 @@ def compose_home(user_name, user_image, is_admin):
 def compose_search_results(query, results, is_admin):
     results_formatted = [
         {
+			"type": "actions",
+			"elements": [
+				{
+					"type": "button",
+                    "action_id": "button_view_profile",
+					"text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": "View Profile"
+					},
+					"value": "View Profile",
+				}
+			]
+		},
+        {
 			"dispatch_action": True,
 			"type": "input",
 			"element": {
@@ -105,17 +120,11 @@ def compose_profile(topics):
     #print(topics)
     topics_formatted = [
 		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "*Your Topics*"
-			}
-		},
-		{
 			"type": "actions",
 			"elements": [
                 {
 					"type": "button",
+     				"action_id": "button_return_to_search",
 					"text": {
 						"type": "plain_text",
 						"emoji": True,
@@ -145,6 +154,13 @@ def compose_profile(topics):
 				}
 			]
 		},
+  		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*Your Topics*"
+			}
+		},
 		{
 			"type": "divider"
 		}
@@ -163,12 +179,13 @@ def compose_profile(topics):
 			},
 			"accessory": {
 				"type": "button",
+				"action_id": "button_edit_topic",
 				"text": {
 					"type": "plain_text",
 					"emoji": True,
 					"text": "Edit"
 				},
-				"value": "click_me_123"
+				"value": f"{topic[0]}"
 			}
 		})
 	
@@ -178,4 +195,60 @@ def compose_profile(topics):
         "type": "home",
         "blocks": topics_formatted
     }
+    return view
+
+def compose_edit_modal(topic):
+    topic_name = topic[1]
+    topic_notes = topic[2]
+    view = {
+		"type": "modal",
+  		"private_metadata": f"{topic[0]}",
+		"callback_id": "topic_edit_modal",
+		"title": {
+			"type": "plain_text",
+			"text": "My App",
+			"emoji": True
+		},
+		"submit": {
+			"type": "plain_text",
+			"text": "Submit Edit",
+			"emoji": True
+		},
+		"close": {
+			"type": "plain_text",
+			"text": "Cancel",
+			"emoji": True
+		},
+		"blocks": [
+			{
+				"type": "input",
+				"block_id": "topic_name_field",
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "topic_name_input",
+					"initial_value": f"{topic_name}",
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Topic Name",
+					"emoji": True
+				}
+			},
+			{
+				"type": "input",
+    			"block_id": "topic_notes_field",	
+				"element": {
+					"type": "plain_text_input",
+					"action_id": "topic_notes_input",
+					"initial_value": f"{topic_notes}",
+					"multiline": True,
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Topic Notes",
+					"emoji": True
+				}
+			}
+		]
+	}
     return view

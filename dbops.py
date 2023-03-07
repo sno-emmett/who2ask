@@ -30,3 +30,25 @@ async def get_topics_by_user(user_id):
   # for row in data:
   #   print(row)
   return data
+
+async def get_topic_by_id(topic_id):
+  #return topic by id
+  con = sqlite3.connect("who2ask.db")
+  cur = con.cursor()
+  cur.execute('''SELECT topics.id, topics.name, topics.notes, topics.community_badge, topics.snohetta_badge
+             FROM topics 
+             WHERE topics.id = ?''', (topic_id,))
+  data = cur.fetchall()
+  con.close()
+  # for row in data:
+  #   print(row)
+  return data
+
+async def write_topic(topic_name, topic_notes, topic_id):
+  #write topic to db
+  con = sqlite3.connect("who2ask.db")
+  cur = con.cursor()
+  cur.execute('''UPDATE topics SET name = ?, notes = ? WHERE id = ?''', (topic_name, topic_notes, topic_id))
+  con.commit()
+  con.close()
+  return

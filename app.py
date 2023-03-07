@@ -8,6 +8,7 @@ from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
 
 app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
 homeviews = {}
+profileviews = {}
 
 @app.event("app_home_opened")
 async def app_home_opened(client, event, logger):
@@ -61,14 +62,78 @@ async def handle_search(ack, body, logger):
 async def handle_view_profile(ack, body, logger):
     await ack()
     user_id = body['user']['id']
+    
+    if user_id not in profileviews:
+      try:
+        topics = await get_topics_by_user(user_id)
+        profileviews[user_id] = compose_profile(topics)
+      except Exception as e:
+        logger.error(f"Error composing profile: {e}")
+      
     try:
-      topics = await get_topics_by_user(user_id)
       await app.client.views_publish(
         user_id=user_id,
-        view=compose_profile(topics)
+        view=profileviews[user_id]
       )
     except Exception as e:
       logger.error(f"Error publishing home tab: {e}")
+
+@app.action("button_return_to_search")
+async def handle_return_to_search(ack, body, logger):
+    await ack()
+    user_id = body['user']['id']
+    try:
+      await app.client.views_publish(
+        user_id=user_id,
+        view=homeviews[user_id]
+      )
+    except Exception as e:
+      logger.error(f"Error publishing home tab: {e}")
+
+@app.action("button_edit_topic")
+async def handle_edit_topic(ack, body, logger):
+  await ack()
+  topic_id = body['actions'][0]['value']
+  
+  try:
+    topic = await get_topic_by_id(topic_id)
+    await app.client.views_open(
+        trigger_id=body["trigger_id"],
+        view= compose_edit_modal(topic[0])
+    )
+  except Exception as e:
+      logger.error(f"Error publishing home tab: {e}")
+      
+@app.view("topic_edit_modal")
+async def topic_edit_submission(ack, body, view, logger):
+  await ack()
+  user_id = body['user']['id']
+  topic_name = view["state"]["values"]["topic_name_field"]["topic_name_input"]["value"]
+  topic_notes = view["state"]["values"]["topic_notes_field"]["topic_notes_input"]["value"]
+  topic_id = view["private_metadata"] #topic_id is stored in modal private_metadata
+  
+  #write updated topic to db
+  try:
+    await write_topic(topic_name, topic_notes, topic_id)
+  except Exception as e:
+    logger.error(f"Error writing topic: {e}")
+  
+  
+  #read updated user topics from db
+  try:
+    topics = await get_topics_by_user(user_id)
+    profileviews[user_id] = compose_profile(topics)
+  except Exception as e:
+    logger.error(f"Error composing profile: {e}")
+  
+  #publish updated profile view
+  try:
+    await app.client.views_publish(
+      user_id=user_id,
+      view=profileviews[user_id]
+    )
+  except Exception as e:
+    logger.error(f"Error publishing home tab: {e}")
 
 async def get_workspace_users(logger):
   try:
