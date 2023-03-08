@@ -77,6 +77,22 @@ async def handle_view_profile(ack, body, logger):
       )
     except Exception as e:
       logger.error(f"Error publishing home tab: {e}")
+      
+@app.action("button_view_admin")
+async def handle_view_admin(ack, body, logger):
+    await ack()
+    user_id = body['user']['id']
+
+    if user_is_admin(user_id):
+      try:
+        await app.client.views_publish(
+          user_id=user_id,
+          view=compose_admin()
+        )
+      except Exception as e:
+        logger.error(f"Error publishing home tab: {e}")
+    else:
+      print("User is not admin")
 
 @app.action("button_return_to_search")
 async def handle_return_to_search(ack, body, logger):
@@ -228,15 +244,38 @@ async def topic_add_submission(ack, body, view, logger):
   except Exception as e:
     logger.error(f"Error publishing home tab: {e}")
 
+@app.action("admin_add_user")
+async def handle_admin_add_user(ack, body, logger):
+  #opens modal to add user to db
+  await ack()
+  
+@app.action("admin_remove_user")
+async def handle_admin_remove_user(ack, body, logger):
+  #opens modal to remove user from db
+  await ack()
+
+@app.action("admin_add_badge_to_topic")
+async def handle_admin_add_badge_to_topic(ack, body, logger):
+  #opens modal to add badge to topic
+  await ack()
+
 async def get_workspace_users(logger):
+  #Retrives all users from slack workspace and writes them to users.json
   try:
     response = await app.client.users_list()
-    #print(response)
     with open('users.json', 'w', encoding='utf-8') as f:
       json.dump(response['members'], f, ensure_ascii=False, indent=4)
     print("Wrote users to users.json")
   except Exception as e:
     logger.error(f"Error getting workspace users: {e}")
+    
+async def get_workspace_user(user_id, logger):
+  #retrieves user info from slack workspace
+  try:
+    response = await app.client.users_info(user=user_id)
+    print(response)
+  except Exception as e:
+    logger.error(f"Error getting workspace user: {e}")
 
 async def main():
   print("Hello Darling, i'm asynchronous!")

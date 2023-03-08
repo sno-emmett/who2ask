@@ -70,3 +70,22 @@ async def delete_topic(topic_id):
   con.commit()
   con.close()
   return
+
+async def add_user(user_id, real_name, image_72):
+  #add user to db
+  con = sqlite3.connect("who2ask.db")
+  cur = con.cursor()
+  cur.execute("INSERT OR IGNORE INTO users(user_id, real_name, image_72) VALUES (?, ?, ?)", (user_id, real_name, image_72))
+  con.commit()
+  con.close()
+  return
+
+async def get_all_users():
+  #return list of all users in db
+  con = sqlite3.connect("who2ask.db")
+  cur = con.cursor()
+  cur.execute('''SELECT users.user_id, users.real_name, users.image_72
+             FROM users''')
+  data = cur.fetchall()
+  con.close()
+  return data

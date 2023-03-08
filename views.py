@@ -3,13 +3,7 @@ from dbops import *
 
 def compose_home(user_name, user_image, is_admin):
     # if not is_admin:
-    view = {
-        "type": "home",
-        "blocks": [
-            {
-			"type": "actions",
-			"elements": [
-				{
+    elements = [{
 					"type": "button",
                     "action_id": "button_view_profile",
 					"text": {
@@ -18,8 +12,25 @@ def compose_home(user_name, user_image, is_admin):
 						"text": "View Profile"
 					},
 					"value": "View Profile",
-				}
-			]
+				}]
+    if is_admin:
+        elements.append({
+					"type": "button",
+                    "action_id": "button_view_admin",
+					"text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": "View Admin"
+					},
+					"value": "View Admin",
+				})
+        
+    view = {
+        "type": "home",
+        "blocks": [
+            {
+			"type": "actions",
+			"elements": elements
 		    },
             {
                 "dispatch_action": True,
@@ -43,11 +54,7 @@ def compose_home(user_name, user_image, is_admin):
     return view
 
 def compose_search_results(query, results, is_admin):
-    results_formatted = [
-        {
-			"type": "actions",
-			"elements": [
-				{
+    elements = [{
 					"type": "button",
                     "action_id": "button_view_profile",
 					"text": {
@@ -56,8 +63,24 @@ def compose_search_results(query, results, is_admin):
 						"text": "View Profile"
 					},
 					"value": "View Profile",
-				}
-			]
+				}]
+    
+    if is_admin:
+        elements.append({
+					"type": "button",
+                    "action_id": "button_view_admin",
+					"text": {
+						"type": "plain_text",
+						"emoji": True,
+						"text": "View Admin"
+					},
+					"value": "View Admin",
+				})
+        
+    results_formatted = [
+        {
+			"type": "actions",
+			"elements": elements
 		},
         {
 			"dispatch_action": True,
@@ -413,4 +436,84 @@ def compose_profile_delete(topics):
         "type": "home",
         "blocks": topics_formatted
     }
+    return view
+
+def compose_admin():
+    view = {
+		"type": "home",
+		"blocks": [
+			{
+				"type": "actions",
+				"elements": [
+					{
+						"type": "button",
+						"text": {
+							"type": "plain_text",
+							"text": "Return To Search",
+							"emoji": True
+						},
+						"value": "click_me_123",
+						"action_id": "button_return_to_search"
+					}
+				]
+			},
+			{
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": "*Admin Panel*"
+				}
+			},
+			{
+				"type": "actions",
+				"elements": [
+					{
+						"type": "button",
+						"text": {
+							"type": "plain_text",
+							"text": "Add User",
+							"emoji": True
+						},
+						"value": "click_me_123",
+						"action_id": "admin_add_user"
+					},
+					{
+						"type": "button",
+						"text": {
+							"type": "plain_text",
+							"text": "Remove User",
+							"emoji": True
+						},
+						"value": "click_me_123",
+						"action_id": "admin_remove_user"
+					},
+					{
+						"type": "button",
+						"text": {
+							"type": "plain_text",
+							"text": "Get All Users As JSON",
+							"emoji": True
+						},
+						"value": "click_me_123",
+						"action_id": "admin_get_all_users"
+					}
+				]
+			},
+			{
+				"type": "actions",
+				"elements": [
+					{
+						"type": "button",
+						"text": {
+							"type": "plain_text",
+							"text": "Add Badge to Topic",
+							"emoji": True
+						},
+						"value": "click_me_123",
+						"action_id": "admin_add_badge_to_topic"
+					}
+				]
+			}
+		]
+	}
     return view
